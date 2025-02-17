@@ -1,0 +1,194 @@
+---
+title: "Assingment-1"
+output: html_document
+date: "2025-02-11"
+---
+
+## Setup
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse, ggplot2)
+set.seed(2001)
+```
+
+# 1. Setting up game environment
+## Defining trials and agents
+```{r}
+# Number of trials per simulation
+trials <- 120  
+
+# Number of agents to simulate
+agents <- 100
+```
+
+# 2. Setting up agents
+## 2.1 WSLS Agent
+```{r}
+Asymmetric_WSLS_agent <- function(prevChoice, Feedback){ 
+    if(Feedback == 1){ choice = ifelse(rbinom(1,1,0.8)==1,prevChoice,1-prevChoice)}
+    else if(Feedback == 0){ choice = ifelse(rbinom(1,1,0.9)==1,1-prevChoice,prevChoice)} 
+    return(choice)
+  }
+    
+```
+
+## 2.2 Memory Agent
+```{r}
+Memory_agent <- function(prevOChoices){
+    choice = rbinom(1,1,mean(prevOChoices))
+    return(choice)
+}
+```
+
+# 3. Let the game play!
+```{r}
+WSLS<- rep(NA, trials) #Even player
+MEM <- rep(NA, trials) #Odd player
+
+WSLS[1] <- rbinom(1,1,0.5)
+MEM[1] <- rbinom(1,1,0.5)
+
+memory_slot <- 7
+prevOChoices <- rep(0.5, memory_slot)
+
+for (i in 2:trials){
+    if (WSLS[i-1] == MEM[i-1]){
+    Feedback = 1
+    } else {Feedback = 0}
+    WSLS[i] <- Asymmetric_WSLS_agent(WSLS[i-1], Feedback)
+    MEM[i] <- Memory_agent(prevOChoices)
+    
+    prevOChoices = c(prevOChoices[2:memory_slot],WSLS[i])
+    }
+    
+```
+
+# 4. Let agents play!
+```{r}
+results <- tibble()  # Initialize empty dataframe
+
+for (agent in seq(agents)) {
+    WSLS <- rep(NA, trials)  # "Self" player
+    MEM <- rep(NA, trials)   # "Opponent" player
+    
+    # Initial random choices
+    WSLS[1] <- rbinom(1, 1, 0.5)
+    MEM[1] <- rbinom(1, 1, 0.5)
+    
+    # Iterate over 120 trials
+    for (i in 2:trials) {
+        if (WSLS[i - 1] == MEM[i - 1]) {
+            Feedback <- 1
+        } else {
+            Feedback <- 0
+        }
+        
+        # Update WSLS and Memory Agent choices
+        WSLS[i] <- Asymmetric_WSLS_agent(WSLS[i - 1], Feedback)
+        MEM[i] <- Memory_agent(prevOChoices)
+        
+        # Update memory storage
+        prevOChoices <- c(prevOChoices[2:memory_slot], WSLS[i])
+    }
+    
+    # Store results
+    temp <- tibble(trial = seq(trials),agent, WSLS, MEM, Feedback = as.numeric(WSLS == MEM))
+    
+    # Append to dataframe
+    if (agent == 1) {
+        results <- temp
+    } else {
+        results <- bind_rows(results, temp)
+    }
+}
+```
+
+# Plotting the data 
+
+```{r}
+library(ggplot2)
+
+plot1 <- ggplot(results, aes(x = trial)) +
+  geom_line(aes(y = WSLS_choice, color = "WSLS Agent"), alpha = 0.7, size = 1) +
+  geom_line(aes(y = MEM_choice, color = "Memory Agent"), alpha = 0.7, size = 1) +
+  scale_color_manual(values = c("WSLS Agent" = "red", "Memory Agent" = "blue")) +
+  labs(title = "Agent Choices Over Time",
+       x = "Trial",
+       y = "Choice (0 or 1)",
+       color = "Agent") +
+  theme_minimal()
+ggsave("Agent_Choice_Over_Time.png", plot1, width = 8, height = 6, dpi = 300)
+
+
+# cumulative probability 
+results <- results %>%
+  mutate(
+    cumulative_WSLS = cumsum(WSLS_choice) / seq_along(WSLS_choice),
+    cumulative_MEM = cumsum(MEM_choice) / seq_along(MEM_choice)
+  )
+
+#  Cumulative probability of choosing 1 over trials
+plot2 <- ggplot(results, aes(x = trial)) +
+  geom_line(aes(y = cumulative_WSLS, color = "WSLS Agent"), size = 1) +
+  geom_line(aes(y = cumulative_MEM, color = "Memory Agent"), size = 1) +
+  labs(
+    title = "WSLS Agent (red) vs Memory Agent (blue)",
+    x = "Trial Number",
+    y = "Cumulative probability of choosing 1 (0-1)",
+    color = "Agent"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("WSLS Agent" = "red", "Memory Agent" = "blue"))
+
+# Save 
+ggsave("Cumulative_Probability_Choosing_1.png", plot2, width = 8, height = 6, dpi = 300)
+
+# Print 
+print(plot2)
+
+# plot cumulative probability of choosing 1 averaged across agents
+plot3 <- ggplot(mean_results, aes(x = trial)) +
+  geom_line(aes(y = mean_cumulative_WSLS, color = "WSLS Agent"), size = 1) +
+  geom_line(aes(y = mean_cumulative_MEM, color = "Memory Agent"), size = 1) +
+  labs(
+    title = "WSLS Agent (red) vs Memory Agent (blue) - 100 Agents",
+    x = "Trial Number",
+    y = "Mean Cumulative Probability of Choosing 1",
+    color = "Agent"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("WSLS Agent" = "red", "Memory Agent" = "blue"))
+
+# Save the plot
+ggsave("Cumulative_Probability_Choosing_1_100_Agents.png", plot3, width = 8, height = 6, dpi = 300)
+
+# Print the plot
+print(plot3)
+
+#  calculate mean choice probability for each trial across all agents
+mean_choices <- results %>%
+  group_by(trial) %>%
+  summarize(
+    mean_WSLS_choice = mean(WSLS),
+    mean_MEM_choice = mean(MEM)
+  )
+
+#  same for 100 Agents
+plot4 <- ggplot(mean_choices, aes(x = trial)) +
+  geom_line(aes(y = mean_WSLS_choice, color = "WSLS Agent"), alpha = 0.7, size = 1) +
+  geom_line(aes(y = mean_MEM_choice, color = "Memory Agent"), alpha = 0.7, size = 1) +
+  labs(
+    title = "Agent Choices Over Time - 100 Agents",
+    x = "Trial",
+    y = "Mean Choice (0 or 1)",
+    color = "Agent"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("WSLS Agent" = "red", "Memory Agent" = "blue"))
+
+# Save 
+ggsave("Agent_Choice_Over_Time_100_Agents.png", plot4, width = 8, height = 6, dpi = 300)
+
+# Print 
+print(plot4)
+```
