@@ -101,6 +101,9 @@ for (agent in seq(agents)) {
         results <- bind_rows(results, temp)
     }
 }
+
+# Save as csv inside the data folder
+write_csv(results, "data/simulated_WSLSvsMEM7.csv")
 ```
 
 # Plotting the data 
