@@ -15,9 +15,9 @@ data {
 // The parameters accepted by the model are theta_w and theta_l
 
 parameters {
-  real<lower=0, upper=1> theta_w; //0.8 in generating model
+  real theta_w; //0.8 in generating model
 
-  real<lower=0, upper=1> theta_l; //0.9 in generating model
+  real theta_l; //0.9 in generating model
 
 }
 
@@ -45,24 +45,41 @@ for (n in 2:N ){
 }
 
 generated quantities {
-  real<lower=0, upper=1> theta_w_prior;
-  real<lower=0, upper=1> theta_w_posterior;
-  real<lower=0, upper=1> theta_l_prior;
-  real<lower=0, upper=1> theta_l_posterior;
+  real theta_w_prior;
+  real theta_w_posterior;
+  real theta_l_prior;
+  real theta_l_posterior;
     
-  int<lower=0, upper=N> prior_w_preds;
-  int<lower=0, upper=N> posterior_w_preds;
-  int<lower=0, upper=N> prior_l_preds;
-  int<lower=0, upper=N> posterior_l_preds;
+  array[N] int<lower=0, upper=N> prior_preds;
+  array[N] int<lower=0, upper=N> posterior_preds;
   
   theta_w_prior = inv_logit(normal_rng(0,1));
   theta_l_prior = inv_logit(normal_rng(0,1));
   theta_w_posterior = inv_logit(theta_w);
   theta_l_posterior = inv_logit(theta_l);
   
-  prior_w_preds = binomial_rng(N, theta_w);
-  prior_l_preds = binomial_rng(N, theta_l);
+  prior_preds[1] = bernoulli_rng(0.5);
+  posterior_preds[1] = bernoulli_rng(0.5);
   
-  posterior_w_preds = binomial_rng(N,inv_logit(theta_w));
-  posterior_l_preds = binomial_rng(N,inv_logit(theta_l));
+  for (n in 2:N ){
+    if (oppchoice[n-1]==selfchoice[n-1] && selfchoice[n-1] == 1){
+        prior_preds[n] = bernoulli_rng(theta_w_prior); }
+    if (oppchoice[n-1]==selfchoice[n-1] && selfchoice[n-1] == 0){
+        prior_preds[n] = bernoulli_rng(1-theta_w_prior); }
+    if (oppchoice[n-1]!=selfchoice[n-1] && selfchoice[n-1] == 1){
+        prior_preds[n] = bernoulli_rng(1-theta_l_prior); }
+    if (oppchoice[n-1]!=selfchoice[n-1] && selfchoice[n-1] == 0){
+        prior_preds[n] = bernoulli_rng(theta_l_prior); }
+    }
+  
+  for (n in 2:N ){
+    if (oppchoice[n-1]==selfchoice[n-1] && selfchoice[n-1] == 1){
+        posterior_preds[n] = bernoulli_rng(theta_w_posterior); }
+    if (oppchoice[n-1]==selfchoice[n-1] && selfchoice[n-1] == 0){
+        posterior_preds[n] = bernoulli_rng(1-theta_w_posterior); }
+    if (oppchoice[n-1]!=selfchoice[n-1] && selfchoice[n-1] == 1){
+        posterior_preds[n] = bernoulli_rng(1-theta_l_posterior); }
+    if (oppchoice[n-1]!=selfchoice[n-1] && selfchoice[n-1] == 0){
+        posterior_preds[n] = bernoulli_rng(theta_l_posterior); }
+    }
 }

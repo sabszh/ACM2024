@@ -37,3 +37,4 @@ samples <- mod$sample(
 
 # Save the fitted model
 samples$save_object("simmodels/AWSLS.rds")
+
