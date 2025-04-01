@@ -1,6 +1,8 @@
 trials_n <- 153
 ID_n <- 40
 
+set.seed(1238)
+
 # Function for agent
 SimpleBayesAgent <- function(FirstRating, GroupRating){
   SecondRating = round((FirstRating + GroupRating)/2)

@@ -44,17 +44,24 @@ posterior_pred_df <- draws_df %>%
 preds <- left_join(prior_pred_df, posterior_pred_df, by = c(".draw", "trial"))
 
 # Prior predictive check
+ggplot(df) +
+  geom_histogram(aes(SecondRating), color = "red", fill = "red", alpha = 0.3, bins = 90) +
+  labs(title = "Prior Predictive Checks") +
+  xlab("Predicted rating") +
+  ylab("Prior Density") +
+  theme_classic()
+
 ggplot(preds) +
   geom_histogram(aes(pred_prior), color = "red", fill = "red", alpha = 0.3, bins = 90) +
   labs(title = "Prior Predictive Checks") +
-  xlab("Predicted heads out of 120 trials") +
-  ylab("Posterior Density") +
+  xlab("Predicted rating") +
+  ylab("Prior Density") +
   theme_classic()
 
 # Posterior Predictive Checks 
 ggplot(preds) +
-  geom_histogram(aes(pred_prior), color = "red", fill = "red", alpha = 0.3, bins = 90) +
-  geom_histogram(aes(pred_posterior), color = "blue", fill = "blue", alpha = 0.3, bins = 90) +
+  geom_histogram(aes(pred_prior), color = "red", fill = "red", alpha = 0.3, bins = 8) +
+  geom_histogram(aes(pred_posterior), color = "blue", fill = "blue", alpha = 0.1, bins = 8) +
   #geom_point(x = sum(data$selfchoice), y = 0, color = "black", shape = 17, size = 5) +
   labs(title = "Posterior Predictive Checks") +
   xlab("Predicted heads out of 120 trials") +

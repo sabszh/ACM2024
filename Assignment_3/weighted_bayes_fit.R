@@ -7,15 +7,16 @@ pacman::p_load(tidyverse,
 
 
 # Import the data
-d <- read.csv("data/Simonsen_clean.csv")
+#d <- read.csv("data/Simonsen_clean.csv")
+d <- read.csv("data/simulated_weighted_bayes.csv")
 
-df <- d %>% subset(ID == 229)
+df <- d %>% subset(ID == 3)
 
 # Turn it into a list with n
-data <- list(N = 153, trial = df$FaceID, FirstRating_og = df$FirstRating, GroupRating_og = df$GroupRating, SecondRating_og = df$SecondRating)
+data <- list(N = 153, trial = df$trial, FirstRating_og = df$FirstRating, GroupRating_og = df$GroupRating, SecondRating_og = df$SecondRating)
 
 # Specify where the model is
-file <- file.path("stan/weighted_bayes.stan")
+file <- file.path("stan/test.stan")
 
 # Compiling the model
 mod <- cmdstan_model(file, cpp_options = list(stan_threads = TRUE))
@@ -35,4 +36,4 @@ samples <- mod$sample(
 )
 
 # Save the fitted model
-samples$save_object("simmodels/weighted_bayes.rds")
+samples$save_object("simmodels/weighted_bayes_sims.rds")

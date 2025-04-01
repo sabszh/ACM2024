@@ -25,14 +25,14 @@ transformed data {
 }
 
 parameters{
-    real<lower=0> weight_direct; // Weight for FirstRating
-    real<lower=0> weight_social; // Weight GroupRating
+    real<lower=0, upper=1> weight_direct; // Weight for FirstRating
+    real<lower=0, upper=1> weight_social; // Weight GroupRating
     }
 
 model{
     // priors
-    target += normal_lpdf(weight_direct | 1, 0.3);
-    target += normal_lpdf(weight_social | 1, 0.3);
+    target += normal_lpdf(weight_direct | 0, 0.3);
+    target += normal_lpdf(weight_social | 0, 0.3);
     
     // each observation is a separate decision
     for (i in 1:N){
@@ -54,11 +54,11 @@ model{
 generated quantities{
     // log likelihood and predictions
     vector[N] log_lik;
-    array[N] int posterior_pred_SecondRating;
+    array[N] int <lower=0, upper=7> posterior_pred_SecondRating;
     
     // generate samples from prior for prior predictive checks
-    real weight_direct_prior = normal_rng(1, 0.3);
-    real weight_social_prior = normal_rng(1, 0.3);
+    real weight_direct_prior = inv_logit(normal_rng(0, 0.3));
+    real weight_social_prior = inv_logit(normal_rng(0, 0.3));
     
     for (i in 1:N){
       real weighted_first_rating = FirstRating[i] * weight_direct;

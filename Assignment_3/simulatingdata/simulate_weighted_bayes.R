@@ -1,6 +1,8 @@
 trials_n <- 153
 ID_n <- 40
 
+set.seed(01923)
+
 # Function for agent
 WeightedBayesAgent <- function(FirstRating, GroupRating){
   SecondRating = round(FirstRating * 0.3 + GroupRating * 0.7)
