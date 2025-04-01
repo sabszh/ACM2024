@@ -16,10 +16,11 @@ df <- d %>% subset(ID == 3)
 data <- list(N = 153, trial = df$trial, FirstRating_og = df$FirstRating, GroupRating_og = df$GroupRating, SecondRating_og = df$SecondRating)
 
 # Specify where the model is
-file <- file.path("stan/test.stan")
+file <- file.path("stan/weighted_bayes.stan")
 
 # Compiling the model
-mod <- cmdstan_model(file, cpp_options = list(stan_threads = TRUE))
+mod <- cmdstan_model(file, cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+
 
 # Commands to call Stan with specific options
 samples <- mod$sample(

@@ -128,14 +128,14 @@ preds_weight_sims <- left_join(prior_pred_weight_sims, posterior_pred_weight_sim
 
 # Prior predictive check
 gridExtra::grid.arrange(
-  (ggplot(preds_simple_real) +
+  (ggplot(preds_simple_sims) +
     geom_histogram(aes(pred_prior), color = "red", fill = "red", alpha = 0.3, bins = 8) +
     labs(title = "Prior Predictive Checks - simple") +
     xlab("Predicted rating") +
     ylab("Posterior Density") +
     theme_classic()),
   
-  (ggplot(preds_weight_real) +
+  (ggplot(preds_weight_sims) +
     geom_histogram(aes(pred_prior), color = "red", fill = "red", alpha = 0.3, bins = 8) +
     labs(title = "Prior Predictive Checks - weighted") +
     xlab("Predicted rating") +
@@ -167,14 +167,14 @@ gridExtra::grid.arrange(
     geom_histogram(aes(weight_direct_prior), fill = "red", alpha = 0.3) +
     geom_histogram(aes(weight_direct), fill = "blue", alpha = 0.3) +
     geom_vline(xintercept = 0.3, linetype = "dashed", color = "black", size = 1.5) +
-    xlim(0, 1) +
+     xlim(0, 1) +
     labs(title = "Prior-posterior Update Checks (simulated)", subtitle = "Weight Direct") +
     theme_classic()),
   (ggplot(draws_df_weighted_sims) +
     geom_histogram(aes((weight_social_prior)), fill = "red", alpha = 0.3) +
     geom_histogram(aes(weight_social), fill = "blue", alpha = 0.3) +
     geom_vline(xintercept = 0.7, linetype = "dashed", color = "black", size = 1.5) +
-    xlim(0, 1) +
+     xlim(0, 1) +
     labs(subtitle = "Weight Social") +
     theme_classic())
 )

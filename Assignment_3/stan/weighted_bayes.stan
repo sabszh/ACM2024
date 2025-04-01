@@ -24,15 +24,22 @@ transformed data {
 
 }
 
-parameters{
-    real<lower=0, upper=1> weight_direct; // Weight for FirstRating
-    real<lower=0, upper=1> weight_social; // Weight GroupRating
-    }
+parameters {
+    real<lower=0> total_weight;  // Total weight (unconstrained)
+    real<lower=0, upper=1> weight_prop; // Proportion of weight assigned to direct influence
+}
+
+transformed parameters {
+    real<lower=0> weight_direct = total_weight * weight_prop;
+    real<lower=0> weight_social = total_weight * (1 - weight_prop);
+}
 
 model{
     // priors
-    target += normal_lpdf(weight_direct | 0, 0.3);
-    target += normal_lpdf(weight_social | 0, 0.3);
+    // Generate prior samples for prior predictive checks
+    real total_weight_prior = normal_rng(1, 0.5);  
+    real weight_prop_prior = beta_rng(2, 2);  
+
     
     // each observation is a separate decision
     for (i in 1:N){
@@ -57,8 +64,19 @@ generated quantities{
     array[N] int <lower=0, upper=7> posterior_pred_SecondRating;
     
     // generate samples from prior for prior predictive checks
-    real weight_direct_prior = inv_logit(normal_rng(0, 0.3));
-    real weight_social_prior = inv_logit(normal_rng(0, 0.3));
+    // Generate prior samples for prior predictive checks
+    real total_weight_prior;
+    real weight_prop_prior;
+    real weight_direct_prior;
+    real weight_social_prior;
+
+    // Sample prior values
+    total_weight_prior = normal_rng(1, 0.5);
+    weight_prop_prior = beta_rng(2, 2);
+    
+    weight_direct_prior = total_weight_prior * weight_prop_prior;
+    weight_social_prior = total_weight_prior * (1 - weight_prop_prior);
+
     
     for (i in 1:N){
       real weighted_first_rating = FirstRating[i] * weight_direct;
@@ -92,5 +110,4 @@ generated quantities{
       prior_pred_SecondRating[i] = beta_binomial_rng(7, prior_alpha_post, prior_beta_post);
       }
 }
-
 
