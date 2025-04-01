@@ -8,24 +8,22 @@ data {
     array[N] int<lower=0, upper=8> SecondRating_og; // what we try to predict
     array[N] int<lower=0, upper=8> FirstRating_og;
     array[N] int<lower=0, upper=8> GroupRating_og;
-    }
-    
-transformed data {
-  array[N] int<lower=0, upper=7> SecondRating;
-  array[N] int<lower=0, upper=7> FirstRating;
-  array[N] int<lower=0, upper=7> GroupRating;
-  
-  
-  for (i in 1:N) {
-    SecondRating[i] = SecondRating_og[i] -1;
-    FirstRating[i]  = FirstRating_og[i] -1;
-    GroupRating[i]  = GroupRating_og[i] -1;
-    }
+}
 
+transformed data {
+    array[N] int<lower=0, upper=7> SecondRating;
+    array[N] int<lower=0, upper=7> FirstRating;
+    array[N] int<lower=0, upper=7> GroupRating;
+
+    for (i in 1:N) {
+        SecondRating[i] = SecondRating_og[i] - 1;
+        FirstRating[i]  = FirstRating_og[i] - 1;
+        GroupRating[i]  = GroupRating_og[i] - 1;
+    }
 }
 
 parameters {
-    real<lower=0> total_weight;  // Total weight (unconstrained)
+    real<lower=0> total_weight; 
     real<lower=0, upper=1> weight_prop; // Proportion of weight assigned to direct influence
 }
 
@@ -34,80 +32,74 @@ transformed parameters {
     real<lower=0> weight_social = total_weight * (1 - weight_prop);
 }
 
-model{
-    // priors
-    // Generate prior samples for prior predictive checks
-    real total_weight_prior = normal_rng(1, 0.5);  
-    real weight_prop_prior = beta_rng(2, 2);  
+model {
+    // Priors
+    total_weight ~ normal(1, 0.1); 
+    weight_prop ~ beta(2, 2); 
 
-    
-    // each observation is a separate decision
-    for (i in 1:N){
-      // for this specific decision:
-      real weighted_first_rating = FirstRating[i] * weight_direct;
-      real weighted_first_rating2 = (7 - FirstRating[i]) * weight_direct;
-      real weighted_group_rating = GroupRating[i] * weight_social;
-      real weighted_group_rating2 = (7 - GroupRating[i]) *  weight_social;
-      // calculate beta parameters for this decision
-      real alpha_post = 1 + weighted_first_rating + weighted_group_rating;
-      real beta_post = 1 + weighted_first_rating2 + weighted_group_rating2;
-    
-      // use beta_binomial distribution to integrate over the full posterior
-      target += beta_binomial_lpmf(SecondRating[i] | 7, alpha_post, beta_post);
+    for (i in 1:N) {
+        real weighted_first_rating = FirstRating[i] * weight_direct;
+        real weighted_first_rating2 = (7 - FirstRating[i]) * weight_direct;
+        real weighted_group_rating = GroupRating[i] * weight_social;
+        real weighted_group_rating2 = (7 - GroupRating[i]) * weight_social;
+
+        // Calculate beta parameters
+        real alpha_post = 1 + weighted_first_rating + weighted_group_rating;
+        real beta_post = 1 + weighted_first_rating2 + weighted_group_rating2;
+
+        // Likelihood
+        target += beta_binomial_lpmf(SecondRating[i] | 7, alpha_post, beta_post);
     }
-
 }
 
-generated quantities{
-    // log likelihood and predictions
+
+generated quantities {
+    // Log likelihood and posterior predictions
     vector[N] log_lik;
-    array[N] int <lower=0, upper=7> posterior_pred_SecondRating;
-    
-    // generate samples from prior for prior predictive checks
-    // Generate prior samples for prior predictive checks
+    array[N] int<lower=0, upper=7> posterior_pred_SecondRating;
+
+    for (i in 1:N) {
+        real weighted_first_rating = FirstRating[i] * weight_direct;
+        real weighted_first_rating2 = (7 - FirstRating[i]) * weight_direct;
+        real weighted_group_rating = GroupRating[i] * weight_social;
+        real weighted_group_rating2 = (7 - GroupRating[i]) * weight_social;
+
+        real alpha_post = 1 + weighted_first_rating + weighted_group_rating;
+        real beta_post = 1 + weighted_first_rating2 + weighted_group_rating2;
+
+        // Log likelihood
+        log_lik[i] = beta_binomial_lpmf(SecondRating[i] | 7, alpha_post, beta_post);
+
+        // Posterior predictive check
+        posterior_pred_SecondRating[i] = beta_binomial_rng(7, alpha_post, beta_post);
+    }
+
+    // ---- Prior Predictive Checks ----
+    // Generate prior samples in generated quantities
     real total_weight_prior;
     real weight_prop_prior;
     real weight_direct_prior;
     real weight_social_prior;
 
     // Sample prior values
-    total_weight_prior = normal_rng(1, 0.5);
+    total_weight_prior = normal_rng(1, 0.1);
     weight_prop_prior = beta_rng(2, 2);
     
     weight_direct_prior = total_weight_prior * weight_prop_prior;
     weight_social_prior = total_weight_prior * (1 - weight_prop_prior);
 
-    
-    for (i in 1:N){
-      real weighted_first_rating = FirstRating[i] * weight_direct;
-      real weighted_first_rating2 = (7 - FirstRating[i]) * weight_direct;
-      real weighted_group_rating = GroupRating[i] * weight_social;
-      real weighted_group_rating2 = (7 - GroupRating[i]) *  weight_social;
-    
-      real alpha_post = 1 + weighted_first_rating + weighted_group_rating;
-      real beta_post = 1 + weighted_first_rating2 + weighted_group_rating2;
-    
-      // log likelihood using beta_binomial
-      log_lik[i] = beta_binomial_lpmf(SecondRating[i] | 7, alpha_post, beta_post);
-    
-      // generate predictions from the full distribution
-      posterior_pred_SecondRating[i] = beta_binomial_rng(7, alpha_post, beta_post); 
-    }
-    
-    
-    // generate prior predictions for model checking
     array[N] int prior_pred_SecondRating;
     
-    for (i in 1:N){
-      real prior_weighted_first_rating = FirstRating[i] * weight_direct_prior;
-      real prior_weighted_first_rating2 = (7 - FirstRating[i]) * weight_direct_prior;
-      real prior_weighted_group_rating = GroupRating[i] * weight_social_prior;
-      real prior_weighted_group_rating2 = (7 - GroupRating[i]) * weight_social_prior;
-      
-      real prior_alpha_post = 1 + prior_weighted_first_rating + prior_weighted_group_rating;
-      real prior_beta_post = 1 + prior_weighted_first_rating2 + prior_weighted_group_rating2;
-      // generate prior predictions
-      prior_pred_SecondRating[i] = beta_binomial_rng(7, prior_alpha_post, prior_beta_post);
-      }
-}
+    for (i in 1:N) {
+        real prior_weighted_first_rating = FirstRating[i] * weight_direct_prior;
+        real prior_weighted_first_rating2 = (7 - FirstRating[i]) * weight_direct_prior;
+        real prior_weighted_group_rating = GroupRating[i] * weight_social_prior;
+        real prior_weighted_group_rating2 = (7 - GroupRating[i]) * weight_social_prior;
 
+        real prior_alpha_post = 1 + prior_weighted_first_rating + prior_weighted_group_rating;
+        real prior_beta_post = 1 + prior_weighted_first_rating2 + prior_weighted_group_rating2;
+
+        // Generate prior predictions
+        prior_pred_SecondRating[i] = beta_binomial_rng(7, prior_alpha_post, prior_beta_post);
+    }
+}
