@@ -167,14 +167,12 @@ gridExtra::grid.arrange(
     geom_histogram(aes(weight_direct_prior), fill = "red", alpha = 0.3) +
     geom_histogram(aes(weight_direct), fill = "blue", alpha = 0.3) +
     geom_vline(xintercept = 0.3, linetype = "dashed", color = "black", size = 1.5) +
-     xlim(0, 1) +
     labs(title = "Prior-posterior Update Checks (simulated)", subtitle = "Weight Direct") +
     theme_classic()),
   (ggplot(draws_df_weighted_sims) +
-    geom_histogram(aes((weight_social_prior)), fill = "red", alpha = 0.3) +
+    geom_histogram(aes(weight_social_prior), fill = "red", alpha = 0.3) +
     geom_histogram(aes(weight_social), fill = "blue", alpha = 0.3) +
     geom_vline(xintercept = 0.7, linetype = "dashed", color = "black", size = 1.5) +
-     xlim(0, 1) +
     labs(subtitle = "Weight Social") +
     theme_classic())
 )

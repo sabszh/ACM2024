@@ -34,8 +34,8 @@ transformed parameters {
 
 model {
     // Priors
-    total_weight ~ normal(1, 0.1); 
-    weight_prop ~ beta(2, 2); 
+    target+= normal_lpdf(total_weight | 1, 0.1); 
+    target+= beta_lpdf(weight_prop | 1, 1); 
 
     for (i in 1:N) {
         real weighted_first_rating = FirstRating[i] * weight_direct;
@@ -83,7 +83,7 @@ generated quantities {
 
     // Sample prior values
     total_weight_prior = normal_rng(1, 0.1);
-    weight_prop_prior = beta_rng(2, 2);
+    weight_prop_prior = beta_rng(1, 1);
     
     weight_direct_prior = total_weight_prior * weight_prop_prior;
     weight_social_prior = total_weight_prior * (1 - weight_prop_prior);
