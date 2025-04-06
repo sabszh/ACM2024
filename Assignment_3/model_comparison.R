@@ -1,7 +1,7 @@
 # Load packages
 pacman::p_load(loo, ggplot2)
 
-'''Model Comparison''' 
+
 
 # weighted and simple model
 simple_bayes <- readRDS("simmodels/simple_bayes_realdata.rds")
