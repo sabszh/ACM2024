@@ -1,6 +1,5 @@
 # Load packages
-pacman::p_load(loo, ggplot2)
-
+pacman::p_load(loo, ggplot2, tidyverse)
 
 
 # weighted and simple model
