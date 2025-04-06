@@ -1,7 +1,7 @@
 # Load packages
 pacman::p_load(loo, ggplot2)
 
-''' Model Comparison ''' 
+'''Model Comparison''' 
 
 # weighted and simple model
 simple_bayes <- readRDS("simmodels/simple_bayes_realdata.rds")
@@ -34,7 +34,7 @@ plot(loo_weighted)
 print(loo_simple)
 print(loo_weighted)
 
-# Compare models
+# Compare models - First input = model1, second = model 2 etc. Just so noone gets confused.
 loo_comparison <- loo_compare(loo_simple, loo_weighted)
 
 # Plot comparison
