@@ -27,7 +27,7 @@ dim(loo_simple)
 dim(loo_weighted)
 
 # Plot PSIS diagnostics - 
-plot(loo_simple) # gives error!
+# plot(loo_simple) # gives error!
 plot(loo_weighted)
 
 # Print the LOO values

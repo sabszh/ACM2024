@@ -7,13 +7,13 @@ pacman::p_load(tidyverse,
 
 
 # Import the data
-#d <- read.csv("data/Simonsen_clean.csv")
-d <- read.csv("data/simulated_simple_bayes.csv")
+d <- read.csv("data/Simonsen_clean.csv")
+#d <- read.csv("data/simulated_simple_bayes.csv")
 
-df <- d %>% subset(ID  == 3)
+df <- d %>% subset(ID  == 201)
 
 # Turn it into a list with n
-data <- list(N = 153, trial = df$trial, FirstRating_og = df$FirstRating, GroupRating_og = df$GroupRating, SecondRating_og = df$SecondRating)
+data <- list(N = 153, trial = df$FaceID, FirstRating_og = df$FirstRating, GroupRating_og = df$GroupRating, SecondRating_og = df$SecondRating)
 
 # Specify where the model is
 file <- file.path("stan/simple_bayes.stan")
@@ -36,4 +36,4 @@ samples <- mod$sample(
 )
 
 # Save the fitted model
-samples$save_object("simmodels/simple_bayes_sim.rds")
+samples$save_object("simmodels/simple_bayes_realdata.rds")
