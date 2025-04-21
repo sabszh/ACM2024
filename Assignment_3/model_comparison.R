@@ -6,6 +6,9 @@ pacman::p_load(loo, ggplot2, tidyverse)
 simple_bayes <- readRDS("simmodels/simple_bayes_realdata.rds")
 weighted_bayes <- readRDS("simmodels/weighted_bayes_realdata.rds")
 
+simple_bayes_sim <- readRDS("simmodels/simple_bayes_sims.rds")
+weighted_bayes_sim <- readRDS("simmodels/weighted_bayes_sims.rds")
+
 
 # Function to extract log-likelihood and compute LOO
 compute_loo <- function(model_fit) {
@@ -20,6 +23,8 @@ compute_loo <- function(model_fit) {
 # Extract log-likelihood from models
 loo_simple <- compute_loo(simple_bayes)
 loo_weighted <- compute_loo(weighted_bayes)
+loo_simple_sim <- compute_loo(simple_bayes_sim)
+loo_weighted_sim <- compute_loo(weighted_bayes_sim)
 
 # Optional!
 # Check dimensions of loo matrix, should match our iterations and observations 
@@ -33,6 +38,8 @@ plot(loo_weighted)
 # Print the LOO values
 print(loo_simple)
 print(loo_weighted)
+print(loo_simple_sim)
+print(loo_weighted_sim)
 
 # Do a pareto-k-diagnostic to see what is happening to our LOO estimates.
 # The Pareto K diagnostics tells us how reliable our LOO estimates are.
@@ -70,7 +77,9 @@ check_pareto_k <- function(loo_result, model_name) {
 # Check diagnostics for all models
 diagnostics <- bind_rows(
   check_pareto_k(loo_simple,"Simple"),
-  check_pareto_k(loo_weighted, "weighted"))
+  check_pareto_k(loo_weighted, "weighted"),
+  check_pareto_k(loo_simple_sim, "simple sims"),
+  check_pareto_k(loo_weighted_sim, "weighted sims"))
 
 # Display diagnostics table
 knitr::kable(diagnostics, 
@@ -80,6 +89,7 @@ knitr::kable(diagnostics,
 
 # Compare models - First input = model1, second = model 2 etc. Just so no one gets confused.
 loo_comparison <- loo_compare(loo_simple, loo_weighted)
+loo_comparison_sims <- loo_compare(loo_simple_sim, loo_weighted_sim)
 
 # Plot model comparison with LOO CV (cross-validation).
 model_weights <- loo_model_weights(list( "Simple Model" = loo_simple, "Weighted Model" = loo_weighted))
