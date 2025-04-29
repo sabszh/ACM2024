@@ -1,0 +1,85 @@
+---
+title: "simulating_data"
+output: html_document
+---
+
+```{r}
+pacman::p_load(tidyverse)
+```
+
+```{r}
+# open file
+read_csv("AlienData.txt")
+```
+
+```{r}
+stimuli <- expand.grid(
+  Feature1 = c(0,1),
+  Feature2 = c(0,1),
+  Feature3 = c(0,1),
+  Feature4 = c(0,1),
+  Feature5 = c(0,1)
+)
+
+# add a column named stimuli that combines the numbers for each row and keeps the originlals
+stimuli <- stimuli %>%
+  mutate(stimuli = paste0(Feature1, Feature2, Feature3, Feature4, Feature5)) %>%
+  select(stimuli, everything())
+```
+
+```{r}
+# setting rules for the game, In the first session: danger depends on the alien having spots AND eyes on stalks (feature 1 AND feature 2 both being 1); nutrition depends on arms being up (feature 4 being 1).
+
+stimuli <- stimuli %>%
+  mutate(
+    category = ifelse(Feature1 == 1 & Feature3 == 1 & Feature4 == 0, 3,
+              ifelse(Feature4 == 1 & (Feature1 == 0 | Feature3 == 0), 2,
+              ifelse(Feature4 == 0 & (Feature1 == 0 | Feature3 == 0), 1,
+              ifelse(Feature4 == 1 & Feature1 == 1 & Feature3 == 1, 4, 0))))
+  )
+```
+
+```{r}
+# shuffle the stimuli
+
+stimuli_shuff1 <- stimuli[sample(nrow(stimuli)), ]
+stimuli_shuff2 <- stimuli_shuff1[sample(nrow(stimuli_shuff1)), ]
+stimuli_shuff3 <- stimuli_shuff2[sample(nrow(stimuli_shuff2)), ]
+
+# stack the stimuli without them mixing
+stimuli_shuff <- stimuli_shuff1 %>%
+  bind_rows(stimuli_shuff2) %>%
+  bind_rows(stimuli_shuff3)
+
+# adding ID for agent just number 1 all rows
+stimuli_shuff <- stimuli_shuff %>%
+  mutate(ID = 1)
+
+```
+
+
+```{r}
+# adding binary dangerous and nutritious columns that is randomly picked (0/1)
+stimuli_shuff <- stimuli_shuff %>%
+  mutate(
+    danger = sample(c(0,1), nrow(stimuli_shuff), replace = TRUE),
+    nutrition = sample(c(0,1), nrow(stimuli_shuff), replace = TRUE)
+  )
+
+# now add response variable that is condtionally dependent on the danger and nutrition columns values
+stimuli_shuff <- stimuli_shuff %>%
+  mutate(
+    response = ifelse(danger == 1 & nutrition == 1, 4,
+              ifelse(danger == 1 & nutrition == 0, 3,
+              ifelse(danger == 0 & nutrition == 1, 2,
+              ifelse(danger == 0 & nutrition == 0, 1, NA))))
+  )
+
+# correct column if category == response
+stimuli_shuff <- stimuli_shuff %>%
+  mutate(
+    correct = ifelse(category == response, 1, 0)
+  )
+```
+
+
