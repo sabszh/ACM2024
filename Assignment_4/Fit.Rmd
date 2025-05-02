@@ -1,0 +1,96 @@
+---
+title: "Fit"
+author: "Tilde Sloth"
+date: "2025-05-02"
+output: html_document
+---
+
+```{r}
+# read packages
+pacman::p_load(tidyverse,
+               here,
+               posterior,
+               cmdstanr,
+               brms, tidybayes)
+```
+
+
+```{r}
+# Specify where the model is
+file <- file.path("GCM_model.stan")
+
+```
+
+
+```{r}
+# Load simulated data
+
+
+
+```
+
+
+```{r}
+# load empirical data
+real_d <- read.csv("AlienData.txt")
+
+# make subset for subject 1 and session 1 and condition 1 
+real_d <- real_d[real_d$subject == 1 & real_d$session == 1 & real_d$condition == 1, ]
+
+# create a column "danger" with 1 for "danger" and 0 for "safe". If category is 3 or 4, it is "danger", otherwise "safe"
+real_d$danger <- ifelse(real_d$category %in% c(3, 4), 1, 0)
+
+# convert stimulus into features
+real_d <- real_d %>%
+  mutate(
+    stim_str = gsub(".jpg", "", stimulus)
+  ) %>%
+  mutate(
+    spots   = as.integer(substr(stim_str, 1, 1)),
+    legs    = as.integer(substr(stim_str, 2, 2)),
+    eyes    = as.integer(substr(stim_str, 3, 3)),
+    arms_up = as.integer(substr(stim_str, 4, 4)),
+    color   = as.integer(substr(stim_str, 5, 5))
+  ) %>%
+  select(-stim_str)
+
+```
+
+
+```{r}
+# prepare data empirical
+gcm_data_empirical <- list(
+  trials = nrow(real_d),
+  nfeatures = 5,
+  danger = real_d$danger,
+  response = real_d$dangerous,
+  stimuli = as.matrix(real_d[, c("spots", "legs", "eyes", "arms_up", "color")]),
+  w_prior_values = c(1, 1, 1, 1, 1),
+  c_prior_values = c(0, 1)
+)
+```
+
+
+
+```{r}
+# fit empirical data 
+
+# Compiling the model
+mod <- cmdstan_model(file, cpp_options = list(stan_threads = TRUE))
+
+ samples_empirical <- mod$sample(
+    data = gcm_data_empirical,
+    seed = 123,
+    chains = 1,
+    parallel_chains = 1,
+    threads_per_chain = 1,
+    iter_warmup = 1000,
+    iter_sampling = 1000,
+    refresh = 500
+  )
+  
+  # Save model fits
+  samples_empirical$save_object("empirical_fit.rds")
+  
+```
+
