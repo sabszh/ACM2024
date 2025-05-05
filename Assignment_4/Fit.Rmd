@@ -65,8 +65,8 @@ gcm_data_empirical <- list(
   danger = real_d$danger,
   response = real_d$dangerous,
   stimuli = as.matrix(real_d[, c("spots", "legs", "eyes", "arms_up", "color")]),
-  w_prior_values = c(1, 1, 1, 1, 1),
-  c_prior_values = c(0, 1)
+  w_prior_values = c(1, 1, 1, 1, 1), # uniform prior
+  c_prior_values = c(0, 1) # mean and sd of the prior
 )
 ```
 

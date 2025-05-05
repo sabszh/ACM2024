@@ -6,7 +6,7 @@ data {
   array[trials] int<lower=0, upper=1> response;   // participant's response (1 = dangerous)
   array[trials, nfeatures] int stimuli;     // binary feature values of each stimulus
 
-  // Priors
+  // Priors (these are specified when running the model)
   vector[nfeatures] w_prior_values;         // prior for feature attention weights
   array[2] real c_prior_values;             // prior for sensitivity parameter (normal on logit scale)
 }
@@ -46,7 +46,7 @@ transformed parameters {
   real<lower=0, upper=5> c = inv_logit(logit_c)*5; // map logit_c to [0, 5]
   
   // parameter r (probability of response = category 1)
-  array[trials] real<lower=0.0001, upper=0.9999> r;
+  array[trials] real<lower=0.0001, upper=0.9999> r; // the real rate but bounded between 0.0001-0.9999
   array[trials] real rr; //real rate
   
   
@@ -57,7 +57,7 @@ transformed parameters {
     for (exemplar in 1:(i-1)){
         array[nfeatures] real dist;
         for (feature in 1:nfeatures){
-            dist[feature] = w[feature]*abs(stimuli[exemplar,feature] - stimuli[i,feature]);
+            dist[feature] = w[feature]*abs(stimuli[exemplar,feature] - stimuli[i,feature]); // manhatten distance
         }
         exemplar_sim[exemplar] = exp(-c * sum(dist)); // scaling factor impacts sensitivity in distances
     }
@@ -94,7 +94,7 @@ transformed parameters {
 model {
   // Priors
   target += dirichlet_lpdf(w | w_prior_values);
-  target += normal_lpdf(logit_c | c_prior_values[1], c_prior_values[2]);
+  target += normal_lpdf(logit_c | c_prior_values[1], c_prior_values[2]); // normal prior
 
   // Likelihood
   target += bernoulli_lpmf(response | r);
@@ -102,10 +102,10 @@ model {
 
 generated quantities {
   // Prior predictive samples
-  vector[nfeatures] w_prior = dirichlet_rng(w_prior_values);
-  real<lower=0, upper=5> c_prior = inv_logit(normal_rng(c_prior_values[1], c_prior_values[2])) * 5;
+  vector[nfeatures] w_prior = dirichlet_rng(w_prior_values); // sampling from the prior
+  real<lower=0, upper=5> c_prior = inv_logit(normal_rng(c_prior_values[1], c_prior_values[2])) * 5; // sampling from the prior
   
-  // for prior predictive checks
+  // Generating prior-predicted responses
   array[trials] real r_prior;
   array[trials] real rr_prior; // real rate
   
@@ -147,11 +147,12 @@ generated quantities {
       }
     }
   }
-    // prior preds
+    // the prior predictions
     array[trials] int<lower=0, upper=1> prior_preds = bernoulli_rng(r_prior);
     
-    // posterior preds
+    // Generate predictions using posterior samples
     array[trials] int<lower=0, upper=1> posterior_preds = bernoulli_rng(r);
+    // Compare posterior predictions to true labels
     array[trials] int<lower=0, upper=1> posterior_true;
     
     for (i in 1:trials) {
@@ -162,7 +163,7 @@ generated quantities {
         }
     }
     
-    // log likelihood
+    // log likelihood for each trial (needed for model fit metrics)
     array[trials] real log_lik; 
 
     for (i in 1:trials){
