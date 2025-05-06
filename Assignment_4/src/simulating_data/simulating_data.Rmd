@@ -107,6 +107,13 @@ stimuli_shuff$dangerous <- predict_dangerous(
 
 ```
 
+```{r}
+# adding "correct" column. 1 when danger and dangerous are equal and 0 when not
+stimuli_shuff <- stimuli_shuff %>%
+  mutate(correct = ifelse(danger == dangerous, 1, 0))
+
+```
+
 
 
 ```{r}
