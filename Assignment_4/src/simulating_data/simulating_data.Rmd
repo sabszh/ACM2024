@@ -101,7 +101,7 @@ predict_dangerous <- function(stimuli, true_c, true_w, danger) {
 stimuli_shuff$dangerous <- predict_dangerous(
   stimuli = stimuli_shuff[, 2:6],
   true_c = 2,
-  true_w = c(0.5, 0.5, 2, 0.5, 1),
+  true_w = c(0.2, 0.2, 0.3, 0.1, 0.2),
   danger = stimuli_shuff$danger
 )
 

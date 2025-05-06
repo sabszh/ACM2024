@@ -105,7 +105,7 @@ mod <- cmdstan_model(file, cpp_options = list(stan_threads = TRUE))
     parallel_chains = 1,
     threads_per_chain = 1,
     iter_warmup = 1000,
-    iter_sampling = 1000,
+    iter_sampling = 3000,
     refresh = 500
   )
   
@@ -124,7 +124,7 @@ samples_simulated <- mod$sample(
     parallel_chains = 1,
     threads_per_chain = 1,
     iter_warmup = 1000,
-    iter_sampling = 1000,
+    iter_sampling = 3000,
     refresh = 500
   )
   

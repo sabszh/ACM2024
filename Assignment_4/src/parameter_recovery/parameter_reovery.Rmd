@@ -1,0 +1,92 @@
+---
+title: "Parameter_recovery"
+author: "Tilde Sloth"
+date: "2025-05-06"
+output: html_document
+---
+
+```{r setup}
+    knitr::opts_knit$set(root.dir = normalizePath("/Users/tildeidunsloth/Documents/GitHub/ACM2024/Assignment_4")) 
+```
+
+```{r}
+# load packages
+pacman::p_load(tidyverse,
+               here,
+               posterior,
+               cmdstanr,
+               brms, tidybayes)
+```
+
+
+```{r}
+# import simulated model
+samples_simulated <- readRDS("src/stan/simulated_fit.rds")
+```
+
+```{r}
+# check model object
+samples_simulated$summary()
+```
+```{r}
+# draw samples
+draws_df <- as.data.frame(samples_simulated$draws())
+```
+
+```{r}
+# compare true and estimated parameters
+
+# True parameter values 
+true_weights <- c(w1 = 0.3, w2 = 0.2, w3 = 0.1, w4 = 0.25, w5 = 0.15)
+true_c <- c_value <- 2
+
+# Extract posterior means
+estimated_weights <- c(
+  w1 = mean(draws_df[["1.w[1]"]]),
+  w2 = mean(draws_df[["1.w[2]"]]),
+  w3 = mean(draws_df[["1.w[3]"]]),
+  w4 = mean(draws_df[["1.w[4]"]]),
+  w5 = mean(draws_df[["1.w[5]"]])
+)
+
+estimated_c <- mean(draws_df[["1.c"]])
+
+# Combine into a data frame for plotting
+weights_df <- data.frame(
+  Parameter = names(true_weights),
+  True = true_weights,
+  Estimated = estimated_weights
+)
+
+c_df <- data.frame(
+  Parameter = "c",
+  True = true_c,
+  Estimated = estimated_c
+)
+
+```
+
+```{r}
+# plot true versus estimated weight parameters
+ggplot(weights_df, aes(x = True, y = Estimated, label = Parameter)) +
+  geom_point(size = 3, color = "darkorange") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_text(vjust = -0.5) +
+  coord_fixed() +
+  xlim(0, 1) + ylim(0, 1) +
+  theme_minimal() +
+  labs(title = "Estimated vs. True Weights", x = "True Weight", y = "Estimated Weight")
+```
+
+```{r}
+# plot true versus estimated scaling parameter
+ggplot(c_df, aes(x = True, y = Estimated)) +
+  geom_point(size = 4, color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_text(aes(label = Parameter), vjust = -1) +
+  xlim(0, 5) + ylim(0, 5) +
+  coord_fixed() +
+  theme_minimal() +
+  labs(title = "Estimated vs. True c Parameter", x = "True c", y = "Estimated c")
+```
+
