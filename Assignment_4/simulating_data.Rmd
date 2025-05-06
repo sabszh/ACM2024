@@ -28,15 +28,13 @@ stimuli <- stimuli %>%
 ```
 
 ```{r}
-# setting rules for the game, In the first session: danger depends on the alien having spots AND eyes on stalks (feature 1 AND feature 2 both being 1); nutrition depends on arms being up (feature 4 being 1).
+# setting rules for the game, In the first session: danger depends on the alien having spots AND eyes on stalks (feature 1 AND feature 3 both being 1); nutrition depends on arms being up (feature 4 being 1).
 
 stimuli <- stimuli %>%
   mutate(
-    category = ifelse(Feature1 == 1 & Feature3 == 1 & Feature4 == 0, 3,
-              ifelse(Feature4 == 1 & (Feature1 == 0 | Feature3 == 0), 2,
-              ifelse(Feature4 == 0 & (Feature1 == 0 | Feature3 == 0), 1,
-              ifelse(Feature4 == 1 & Feature1 == 1 & Feature3 == 1, 4, 0))))
+    danger = ifelse(Feature1 == 1 & Feature3 == 1, 1, 0)
   )
+
 ```
 
 ```{r}
@@ -55,31 +53,69 @@ stimuli_shuff <- stimuli_shuff1 %>%
 stimuli_shuff <- stimuli_shuff %>%
   mutate(ID = 1)
 
+# add trials to stimuli_shuff
+stimuli_shuff <- stimuli_shuff %>%
+  mutate(trials = row_number())
+
 ```
 
 
 ```{r}
-# adding binary dangerous and nutritious columns that is randomly picked (0/1)
-stimuli_shuff <- stimuli_shuff %>%
-  mutate(
-    danger = sample(c(0,1), nrow(stimuli_shuff), replace = TRUE),
-    nutrition = sample(c(0,1), nrow(stimuli_shuff), replace = TRUE)
-  )
+# distance function - might need to define that w is vector?
+distance <- function(vect1, vect2, w) {
+  return(sum(w*abs(vect1-vect2)))
+}
 
-# now add response variable that is condtionally dependent on the danger and nutrition columns values
-stimuli_shuff <- stimuli_shuff %>%
-  mutate(
-    response = ifelse(danger == 1 & nutrition == 1, 4,
-              ifelse(danger == 1 & nutrition == 0, 3,
-              ifelse(danger == 0 & nutrition == 1, 2,
-              ifelse(danger == 0 & nutrition == 0, 1, NA))))
-  )
+# similarity function 
+similarity <- function(distance, c) {
+  return(exp(-c * distance))
+}
 
-# correct column if category == response
-stimuli_shuff <- stimuli_shuff %>%
-  mutate(
-    correct = ifelse(category == response, 1, 0)
-  )
+
+# function for predicting the dangerous response
+predict_dangerous <- function(stimuli, true_c, true_w, danger) {
+  trials <- nrow(stimuli)
+  r <- c()
+  
+  for (i in 1:trials){
+    
+    if (i == 1 || sum(danger[1:(i-1)]) == 0 || sum(danger[1:(i-1)]) == (i-1)) {
+      r = c(r, 0.5)
+    }
+      else {
+        similarities <- c()
+      
+      for (exemplar in 1:(i-1)){
+        dist <- distance(stimuli[i, ], stimuli[exemplar, ], true_w)
+        sim <- similarity(dist, true_c)
+        similarities <- c(similarities, sim)
+      }
+      numerator <- mean(similarities[danger[1:(i-1)] == 1])
+      denominator <- mean(similarities[danger[1:(i-1)] == 1]) + mean(similarities[danger[1:(i-1)] == 0])
+      r <- c(r, numerator/denominator)
+    }
+  }
+  return(rbinom(trials,1,r)) # probabilistic response - not deterministic
+}
+
+```
+
+```{r}
+
+stimuli_shuff$dangerous <- predict_dangerous(
+  stimuli = stimuli_shuff[, 2:6],
+  true_c = 2,
+  true_w = c(1, 1, 1, 1, 1),
+  danger = stimuli_shuff$danger
+)
+
+```
+
+
+
+```{r}
+# save simulated data as csv
+write_csv(stimuli_shuff, "simulated_data.csv")
 ```
 
 
