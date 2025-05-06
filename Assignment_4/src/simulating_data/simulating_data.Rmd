@@ -7,23 +7,19 @@ output: html_document
 pacman::p_load(tidyverse)
 ```
 
-```{r}
-# open file
-read_csv("AlienData.txt")
-```
 
 ```{r}
 stimuli <- expand.grid(
-  Feature1 = c(0,1),
-  Feature2 = c(0,1),
-  Feature3 = c(0,1),
-  Feature4 = c(0,1),
-  Feature5 = c(0,1)
+  spots = c(0,1),
+  legs = c(0,1),
+  eyes = c(0,1),
+  arms_up = c(0,1),
+  color = c(0,1)
 )
 
 # add a column named stimuli that combines the numbers for each row and keeps the originlals
 stimuli <- stimuli %>%
-  mutate(stimuli = paste0(Feature1, Feature2, Feature3, Feature4, Feature5)) %>%
+  mutate(stimuli = paste0(spots, legs, eyes, arms_up, color)) %>%
   select(stimuli, everything())
 ```
 
@@ -32,7 +28,7 @@ stimuli <- stimuli %>%
 
 stimuli <- stimuli %>%
   mutate(
-    danger = ifelse(Feature1 == 1 & Feature3 == 1, 1, 0)
+    danger = ifelse(spots == 1 & eyes == 1, 1, 0)
   )
 
 ```
@@ -105,7 +101,7 @@ predict_dangerous <- function(stimuli, true_c, true_w, danger) {
 stimuli_shuff$dangerous <- predict_dangerous(
   stimuli = stimuli_shuff[, 2:6],
   true_c = 2,
-  true_w = c(1, 1, 1, 1, 1),
+  true_w = c(0.5, 0.5, 2, 0.5, 1),
   danger = stimuli_shuff$danger
 )
 

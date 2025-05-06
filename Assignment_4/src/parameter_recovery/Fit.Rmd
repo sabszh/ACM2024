@@ -5,6 +5,10 @@ date: "2025-05-02"
 output: html_document
 ---
 
+```{r setup}
+    knitr::opts_knit$set(root.dir = normalizePath("/Users/tildeidunsloth/Documents/GitHub/ACM2024/Assignment_4")) 
+```
+
 ```{r}
 # read packages
 pacman::p_load(tidyverse,
@@ -17,14 +21,15 @@ pacman::p_load(tidyverse,
 
 ```{r}
 # Specify where the model is
-file <- file.path("GCM_model.stan")
+file <- file.path("src/stan/GCM_model.stan")
 
 ```
 
 
+
 ```{r}
 # Load simulated data
-
+sim_dat <- read.csv("data/simulated_data.csv")
 
 
 ```
@@ -32,7 +37,7 @@ file <- file.path("GCM_model.stan")
 
 ```{r}
 # load empirical data
-real_d <- read.csv("AlienData.txt")
+real_d <- read.csv("data/AlienData.txt")
 
 # make subset for subject 1 and session 1 and condition 1 
 real_d <- real_d[real_d$subject == 1 & real_d$session == 1 & real_d$condition == 1, ]
@@ -54,6 +59,9 @@ real_d <- real_d %>%
   ) %>%
   select(-stim_str)
 
+# remove rows with test = 1
+real_d <- real_d[real_d$test == 0, ]
+
 ```
 
 
@@ -70,6 +78,18 @@ gcm_data_empirical <- list(
 )
 ```
 
+```{r}
+# prepare data simulated
+gcm_data_simulated <- list(
+  trials = nrow(sim_dat),
+  nfeatures = 5,
+  danger = sim_dat$danger,
+  response = sim_dat$dangerous,
+  stimuli = as.matrix(sim_dat[, c("spots", "legs", "eyes", "arms_up", "color")]),
+  w_prior_values = c(1, 1, 1, 1, 1), # uniform prior
+  c_prior_values = c(0, 1) # mean and sd of the prior
+)
+```
 
 
 ```{r}
@@ -92,5 +112,23 @@ mod <- cmdstan_model(file, cpp_options = list(stan_threads = TRUE))
   # Save model fits
   samples_empirical$save_object("empirical_fit.rds")
   
+```
+
+```{r}
+# fit simulated data
+
+samples_simulated <- mod$sample(
+    data = gcm_data_simulated,
+    seed = 123,
+    chains = 1,
+    parallel_chains = 1,
+    threads_per_chain = 1,
+    iter_warmup = 1000,
+    iter_sampling = 1000,
+    refresh = 500
+  )
+  
+  # Save model fits
+  samples_simulated$save_object("simulated_fit.rds")
 ```
 
