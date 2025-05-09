@@ -37,7 +37,7 @@ draws_df <- as.data.frame(samples_simulated$draws())
 # compare true and estimated parameters
 
 # True parameter values 
-true_weights <- c(w1 = 0.3, w2 = 0.2, w3 = 0.1, w4 = 0.25, w5 = 0.15)
+true_weights <- c(w1 = 0.2, w2 = 0.2, w3 = 0.3, w4 = 0.1, w5 = 0.2)
 true_c <- c_value <- 2
 
 # Extract posterior means
