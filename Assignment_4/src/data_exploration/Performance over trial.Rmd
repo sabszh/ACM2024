@@ -1,0 +1,122 @@
+---
+title: "Performance over trial"
+author: "Emily"
+date: "2025-03-09"
+output: html_document
+---
+
+```{r}
+# setwd("./Assignment_4/src/data_exploration")
+pacman::p_load(tidyverse,
+               here,
+               posterior,
+               cmdstanr,
+               brms, tidybayes)
+# Load simulated data
+sim_data <- read.csv("../../data/simulated_data.csv")
+# Load Alien data
+emp_data <- read.delim("../../data/AlienData.txt", header = T, sep = ",")
+
+
+# Load simulated fitted model
+sim_fit <- readRDS(file = "../stan/simulated_fit.rds")
+# Load empirical fitted model
+emp_fit <- readRDS(file = "../stan/empirical_fit.rds")
+
+
+```
+
+# Calculate cumulative accuracy. Simulated data 
+
+Tried to calculate and plot the cumulative sum of correct responses.
+
+# Cum_correct: 
+We keep track of each correct response per trial.
+# Cum_accuracy: 
+Calculate the cumulative accuracy (Not sure if this is the right way to do it!).
+Divide the current sum of correct responses at the given trial, by trial number, which should give the current correct percentage of responses.
+
+```{r}
+# We create two new coloumns to our dataframe
+df_sim <- sim_data %>%
+  
+  mutate(cum_correct = cumsum(correct),
+         cum_accuracy = cum_correct / trials)
+
+# Plot cumulative accuracy
+ggplot(df_sim, aes(x = trials, y = cum_accuracy)) +
+  geom_line(color = "blue", linewidth = 1) +
+  labs(
+    title = "Simulated data: Cumulative Accuracy Over Trials for GCM agent",
+    x = "Trial",
+    y = "Cumulative Accuracy"
+  ) +
+  theme_minimal()
+
+
+
+```
+```{r}
+# Fuck around
+
+library(posterior)
+
+# Extract posterior draws
+sim_draws <- as_draws_df(sim_fit$draws())
+
+# Get posterior means for c and w
+mean_c <- mean(sim_draws$c)
+mean_w <- colMeans(sim_draws %>% select(starts_with("w")))
+
+
+
+```
+
+
+# Cummulative accuracy for Alien data - just for funsies
+
+
+```{r}
+# We create two new coloumns to our dataframe like before
+df_emp <- emp_data %>%
+  group_by(subject) %>%  # Group by subject
+  mutate(
+    cum_correct = cumsum(correct),
+    cum_accuracy = cum_correct / row_number() # Row number instead of trial, plot is all weird and wonky if you use trial, but i believe using row_number() should function the same 
+  ) %>%
+
+
+
+# Plot cumulative accuracy
+ggplot(df_emp, aes(x = trial, y = cum_accuracy, color = as.factor(subject))) +
+  geom_line() +
+  labs(
+    title = "Alien data: Cumulative Accuracy Over Trials by Subject",
+    x = "Trial",
+    y = "Cumulative Accuracy",
+    color = "Subject"
+  ) +
+  theme_minimal()
+
+
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
