@@ -6,22 +6,13 @@ output: html_document
 ---
 
 ```{r}
-# setwd("./Assignment_4/src/data_exploration")
-pacman::p_load(tidyverse,
-               here,
-               posterior,
-               cmdstanr,
-               brms, tidybayes)
+pacman::p_load(tidyverse)
+
 # Load simulated data
 sim_data <- read.csv("../../data/simulated_data.csv")
 # Load Alien data
 emp_data <- read.delim("../../data/AlienData.txt", header = T, sep = ",")
 
-
-# Load simulated fitted model
-sim_fit <- readRDS(file = "../stan/simulated_fit.rds")
-# Load empirical fitted model
-emp_fit <- readRDS(file = "../stan/empirical_fit.rds")
 
 
 ```
@@ -56,28 +47,11 @@ ggplot(df_sim, aes(x = trials, y = cum_accuracy)) +
 
 
 ```
-```{r}
-# Fuck around
-
-library(posterior)
-
-# Extract posterior draws
-sim_draws <- as_draws_df(sim_fit$draws())
-
-# Get posterior means for c and w
-mean_c <- mean(sim_draws$c)
-mean_w <- colMeans(sim_draws %>% select(starts_with("w")))
-
-
-
-```
-
-
 # Cummulative accuracy for Alien data - just for funsies
 
 
 ```{r}
-# We create two new coloumns to our dataframe like before
+# We create two new coloumns to our dataframe like before. 
 df_emp <- emp_data %>%
   group_by(subject) %>%  # Group by subject
   mutate(
@@ -103,20 +77,3 @@ ggplot(df_emp, aes(x = trial, y = cum_accuracy, color = as.factor(subject))) +
 ```
 
 
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-
-```{r}
-
-```
