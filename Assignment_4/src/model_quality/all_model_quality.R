@@ -211,40 +211,46 @@ gridExtra::grid.arrange(
 plot_w_real <- bind_rows(
   as_tibble(w_prior_real) %>% 
     pivot_longer(everything(), names_to = "parameter", values_to = "value") %>% 
+    mutate(feature_n = as.integer(gsub(".*\\[(\\d+)\\]", "\\1", parameter))) %>% 
     mutate(type = "prior"),
   as_tibble(w_real) %>% 
     pivot_longer(everything(), names_to = "parameter", values_to = "value") %>% 
+    mutate(feature_n = as.integer(gsub(".*\\[(\\d+)\\]", "\\1", parameter))) %>% 
     mutate(type = "posterior")
 )
 
 plot_w_sims <- bind_rows(
   as_tibble(w_prior_sim) %>% 
     pivot_longer(everything(), names_to = "parameter", values_to = "value") %>% 
+    mutate(feature_n = as.integer(gsub(".*\\[(\\d+)\\]", "\\1", parameter))) %>% 
     mutate(type = "prior"),
   as_tibble(w_sim) %>% 
     pivot_longer(everything(), names_to = "parameter", values_to = "value") %>% 
+    mutate(feature_n = as.integer(gsub(".*\\[(\\d+)\\]", "\\1", parameter))) %>% 
     mutate(type = "posterior")
 )
 
-# Create the plot
+# Feature weights
 gridExtra::grid.arrange(
   ggplot(plot_w_sims, aes(x = value, fill = type)) +
     geom_density(alpha = 0.6) +
-    facet_wrap(~ parameter) + 
+    facet_wrap(~ feature_n) + 
     labs(
       title = "Feature Weights (w) Prior vs. Posterior (Simulated data)",
       x = "Value", y = "Density"
     ) +
-    theme_minimal(),
+    theme_minimal() + theme(legend.position = "none"),
   ggplot(plot_w_real, aes(x = value, fill = type)) +
     geom_density(alpha = 0.6) +
-    facet_wrap(~ parameter) + 
+    facet_wrap(~ feature_n) + 
     labs(
       title = "Feature Weights (w) Prior vs. Posterior (Real data)",
       x = "Value", y = "Density"
     ) +
-    theme_minimal()
+    theme_minimal() + theme(legend.position = "bottom")
 )
+
+
 
 # Attention weights
 gridExtra::grid.arrange(
@@ -254,14 +260,14 @@ gridExtra::grid.arrange(
     ggplot(aes(x = value, fill = weight)) +
     geom_density(alpha = 0.5) +
     labs(title = "Posterior Distributions of Attention Weights (Simulated data)", x = "Weight", y = "Density") +
-    theme_minimal(),
+    theme_minimal() + theme(legend.position = "none"),
   draws_gcm_real %>%
     select(starts_with("w[")) %>%
     pivot_longer(cols = everything(), names_to = "weight", values_to = "value") %>%
     ggplot(aes(x = value, fill = weight)) +
     geom_density(alpha = 0.5) +
     labs(title = "Posterior Distributions of Attention Weights (Real data)", x = "Weight", y = "Density") +
-  theme_minimal()
+  theme_minimal() + theme(legend.position = "bottom")
 )
 
 # Sensitivity parameter c
