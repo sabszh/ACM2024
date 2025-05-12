@@ -3,3 +3,48 @@ title: "empirical_data"
 output: html_document
 ---
 
+
+Load needed packages
+```{r, echo=TRUE, results='hide'}
+library(pacman)
+p_load(tidyverse, readr)
+```
+
+Read in the data, filter it to extract just subject 1, at session1, in condition 1, where its not the test trials.
+Then selecting the relevant columns.
+```{r, echo=TRUE, message='hide'}
+AlienData <- read_csv("Assignment_4/data/AlienData.txt") %>% 
+             filter(subject == 1 & session ==1 & condition==1 & test != 1) %>%
+             select(trial, category, dangerous, nutritious = nutricious , response, correct)
+
+
+```
+
+Adding a cumulative count column for correct answers, and plotting that against a reference line (100% correct)
+```{r, echo=TRUE, results='hide'}
+
+AlienData <- AlienData %>% mutate(cum_correct = cumsum(correct))
+
+plot1 <- ggplot(AlienData, aes(x = trial, y = cum_correct)) +
+  geom_line(color = "red", linewidth = 1.3) +  
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", linewidth = 1) +
+  xlim(0, NA) + 
+  ylim(0, 96) +  
+  theme_minimal(base_size = 14) +  
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "lightgrey"),
+    panel.grid.minor.y = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA)
+  )+  
+  labs(x = "Trial number",y = "Cumulative correct", title ="Cumulative count of correct answers")
+
+plot1
+```
+
+
+```{r, echo=FALSE}
+```
+
