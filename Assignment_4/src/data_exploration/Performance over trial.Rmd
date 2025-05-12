@@ -57,7 +57,7 @@ df_emp <- emp_data %>%
   mutate(
     cum_correct = cumsum(correct),
     cum_accuracy = cum_correct / row_number() # Row number instead of trial, plot is all weird and wonky if you use trial, but i believe using row_number() should function the same 
-  ) %>%
+  ) 
 
 
 
@@ -69,8 +69,9 @@ ggplot(df_emp, aes(x = trial, y = cum_accuracy, color = as.factor(subject))) +
     x = "Trial",
     y = "Cumulative Accuracy",
     color = "Subject"
-  ) +
+  ) + 
   theme_minimal()
+
 
 
 

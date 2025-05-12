@@ -1,0 +1,88 @@
+---
+title: "Model quality check Empirical data"
+author: "Emily"
+date: "2025-05-11"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse, extraDistr, posterior,ggplot2, dplyr, gtools, cmdstanr)
+```
+
+```{r}
+# Load simulated data
+sim_data <- read.csv("../../data/simulated_data.csv")
+# Load Alien data
+emp_data <- read.delim("../../data/AlienData.txt", header = T, sep = ",")
+
+
+# Load the two fitted GCM models from the stan directory
+sim_fit <- readRDS("../stan/simulated_fit.rds")
+emp_fit <- readRDS("../stan/empirical_fit.rds")
+
+```
+
+# Empirical data 
+
+Something is really weird, and I have done something wrong. The plots look very strange!!
+
+```{r}
+# Just checking it's working
+emp_fit$summary()
+```
+
+```{r}
+# Extract posterior draws
+draws_df <- as_draws_df(emp_fit$draws())
+
+# Add priors to data frame
+draws_df <- draws_df %>%
+  mutate(
+    c_prior = rnorm(nrow(draws_df), 1, 1), # Not sure if this is correct. I don't know if we need to transform c?
+    w_prior1 = rdirichlet(nrow(draws_df), c(1, 1, 1, 1, 1))[, 1],
+    w_prior2 = rdirichlet(nrow(draws_df), c(1, 1, 1, 1, 1))[, 2],
+    w_prior3 = rdirichlet(nrow(draws_df), c(1, 1, 1, 1, 1))[, 3],
+    w_prior4 = rdirichlet(nrow(draws_df), c(1, 1, 1, 1, 1))[, 4],
+    w_prior5 = rdirichlet(nrow(draws_df), c(1, 1, 1, 1, 1))[, 5]
+    )
+
+ggplot(draws_df) +
+  geom_histogram(aes(c), bins = 50, alpha = 0.6, fill = "lightblue") +
+  geom_histogram(aes(c_prior), bins = 50, alpha = 0.4, fill = "pink") +
+  theme_bw() +
+  labs(title = "Posterior vs Prior for c", x = "c (sensitivity)", y = "Count")
+
+```
+
+```{r}
+
+# Plotting weights (w1)
+ggplot(draws_df) +
+  geom_histogram(aes(`w[1]`), bins = 50, alpha = 0.6, fill = "lightblue") +
+  geom_histogram(aes(w_prior1), bins = 50, alpha = 0.4, fill = "pink") +
+  theme_minimal() +
+  labs(title = "Posterior vs Prior for w[1]",
+       x = "w[1] (attention weight)", y = "Count")
+
+
+
+# Helper function to automate plotting weights. Add 1-5 to call coloumn name for one of the weights, like w[i]
+plot_w <- function(i) {
+  ggplot(draws_df) +
+    geom_histogram(aes_string(paste0("`w[", i, "]`")), bins = 50, alpha = 0.6, fill = "lightblue") +
+    geom_histogram(aes_string(paste0("w_prior", i)), bins = 50, alpha = 0.4, fill = "pink") +
+    theme_minimal() +
+    labs(title = paste0("Posterior vs Prior for w[", i, "]"),
+         x = paste0("w[", i, "] (attention weight)"),
+         y = "Count")
+}
+
+plot_w(1)
+plot_w(2)
+plot_w(3)
+plot_w(4)
+plot_w(5)
+
+```
+
+
