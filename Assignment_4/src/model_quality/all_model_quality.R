@@ -195,14 +195,16 @@ accuracy_summary_sim <- posterior_accuracy_sim %>%
   summarise(accuracy = mean(correct))
 
 gridExtra::grid.arrange(
-  ggplot(accuracy_summary_sim, aes(x = accuracy)) +
+  ggplot(accuracy_summary_sim, aes(x = accuracy,fill="red")) +
     geom_histogram(bins = 30) +
     labs(title = "Posterior Predictive Accuracy (Simulated data)", x = "Accuracy", y = "Draw Frequency") +
-    theme_classic(),
-  ggplot(accuracy_summary_real, aes(x = accuracy)) +
+    xlim(0,1) +
+    theme_classic() + theme(legend.position = "none"),
+  ggplot(accuracy_summary_real, aes(x = accuracy, ,fill="red")) +
     geom_histogram(bins = 30) +
     labs(title = "Posterior Predictive Accuracy (Real data)", x = "Accuracy", y = "Draw Frequency") +
-    theme_classic()
+    xlim(0,1) + 
+    theme_classic() + theme(legend.position = "none")
 )
 
 
@@ -240,6 +242,7 @@ gridExtra::grid.arrange(
       x = "Value", y = "Density"
     ) +
     theme_minimal() + theme(legend.position = "none"),
+  
   ggplot(plot_w_real, aes(x = value, fill = type)) +
     geom_density(alpha = 0.6) +
     facet_wrap(~ feature_n) + 
@@ -260,14 +263,14 @@ gridExtra::grid.arrange(
     ggplot(aes(x = value, fill = weight)) +
     geom_density(alpha = 0.5) +
     labs(title = "Posterior Distributions of Attention Weights (Simulated data)", x = "Weight", y = "Density") +
-    theme_minimal() + theme(legend.position = "none"),
+    theme_minimal() + theme(legend.position = "none") + xlim(0,1),
   draws_gcm_real %>%
     select(starts_with("w[")) %>%
     pivot_longer(cols = everything(), names_to = "weight", values_to = "value") %>%
     ggplot(aes(x = value, fill = weight)) +
     geom_density(alpha = 0.5) +
     labs(title = "Posterior Distributions of Attention Weights (Real data)", x = "Weight", y = "Density") +
-  theme_minimal() + theme(legend.position = "bottom")
+  theme_minimal() + theme(legend.position = "bottom") + xlim(0,1)
 )
 
 # Sensitivity parameter c
@@ -275,11 +278,11 @@ gridExtra::grid.arrange(
   ggplot(draws_gcm_sims, aes(x = c)) +
     geom_density(fill = "purple", alpha = 0.5) +
     labs(title = "Posterior of Sensitivity, c (Simulated data)", x = "c", y = "Density") +
-    theme_classic(),
+    theme_classic() + xlim(0,5),
   ggplot(draws_gcm_real, aes(x = c)) +
     geom_density(fill = "purple", alpha = 0.5) +
     labs(title = "Posterior of Sensitivity, c (Real data)", x = "c", y = "Density") +
-    theme_classic()
+    theme_classic() + xlim(0,5)
 )
 
 
